@@ -2,6 +2,7 @@ import scipy.optimize._linesearch as sc
 
 from dataclasses import dataclass
 from prettytable import PrettyTable
+from functools import lru_cache
 
 from nary import *
 from plot import *
@@ -160,6 +161,15 @@ def rosenbrock(x: float, y: float) -> float:
 def himmelblau(x: float, y: float) -> float:
     return (x ** 2 + y - 11) ** 2 + (x + y ** 2 - 7) ** 2
 
+def noise(x: float, y: float, amplitude: float = 0.1) -> float:
+    return amplitude * (np.sin(10 * x + 20 * y) + np.cos(15 * x - 10 * y)) / 2
+
+def noisy_function(x: float, y: float, amplitude: float, function: Callable[[float, float], float]) -> float:
+    return function(x, y) + noise(x,y, amplitude)
+
+def noisy_wrapper(x: float, y: float) -> float:
+    return noisy_function(x, y, amplitude=0.1, function=spherical)
+
 INTERESTING = \
     [
         [spherical, [-3.0, 2.0], "Quadratic function: 100 - np.sqrt(100 - x^2 - y^2)"],
@@ -168,9 +178,9 @@ INTERESTING = \
     ]
 
 if __name__ == "__main__":
-    func = NaryFunc(himmelblau)
-    start = np.array([0.0, -1.0])
+    func = NaryFunc(noisy_wrapper)
+    start = np.array([0.0, 5.0])
     print(example_table(func, start))
-    x, _, _, trajectory = gradient_descent(func, start, wolfe_rule_gen(α=0.5, c1=1e-4, c2=0.3))
-    plot_gradient(lambda x: func(x), len(start) == 1, len(start) == 2, trajectory, name="Himmelblau Function")
+    x, _, _, trajectory = gradient_descent(func, start, armijo_rule_gen(α=0.9, q=0.5, c=0.5))
+    plot_gradient(lambda x: func(x), len(start) == 1, len(start) == 2, trajectory, name="Noisy Rosenbroke Function")
     print(x)
