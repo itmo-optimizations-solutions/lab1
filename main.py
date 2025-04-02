@@ -127,8 +127,8 @@ KNOWN = [
     Algorithm("Exponential Decay", "λ=0.01", exponential_decay(λ=0.01)),
     Algorithm("Polynomial Decay", "α=0.5, β=1", polynomial_decay(α=0.5, β=1)),
 
-    Algorithm("Armijo", "a=0.9, q=0.5, c=0.5", armijo_rule_gen(α=0.9, q=0.5, c=0.5)),
-    Algorithm("Wolfe Rule", "a=0.5, c1=1e-4, c2=0.3", wolfe_rule_gen(α=0.5, c1=1e-4, c2=0.3)),
+    Algorithm("Armijo", "α=0.9, q=0.5, c=0.5", armijo_rule_gen(α=0.9, q=0.5, c=0.5)),
+    Algorithm("Wolfe Rule", "α=0.5, c1=1e-4, c2=0.3", wolfe_rule_gen(α=0.5, c1=1e-4, c2=0.3)),
 
     Algorithm("SciPy Armijo", "!", scipy_armijo),
     Algorithm("SciPy Wolfe", "!", scipy_wolfe),
