@@ -2,7 +2,6 @@ import scipy.optimize._linesearch as sc
 
 from dataclasses import dataclass
 from prettytable import PrettyTable
-from functools import lru_cache
 
 from nary import *
 from plot import *
@@ -165,7 +164,7 @@ def noise(x: float, y: float, amplitude: float = 0.1) -> float:
     return amplitude * (np.sin(10 * x + 20 * y) + np.cos(15 * x - 10 * y)) / 2
 
 def noisy_function(x: float, y: float, amplitude: float, function: Callable[[float, float], float]) -> float:
-    return function(x, y) + noise(x,y, amplitude)
+    return function(x, y) + noise(x, y, amplitude)
 
 def noisy_wrapper(x: float, y: float) -> float:
     return noisy_function(x, y, amplitude=0.1, function=spherical)
