@@ -25,6 +25,13 @@ def gradient_descent(
 
     while True:
         gradient = func.gradient(x)
+
+        eps_array = np.full_like(gradient, ε ** 0.5)
+        max_state = False
+        if np.allclose(gradient, 0) and func(x + eps_array) < func(x):
+            x += eps_array
+            max_state = True
+
         u = -gradient
         α = learning(k) if is_scheduling(learning) else learning(func, x, u)
         α = error if α is None else α  # @Nullable
@@ -33,7 +40,7 @@ def gradient_descent(
         trajectory.append(x.copy())
 
         k += 1
-        if np.linalg.norm(gradient) ** 2 < ε or k > limit:
+        if not max_state and np.linalg.norm(gradient) ** 2 < ε or k > limit:
             break
 
     grad_count = func.count
@@ -151,6 +158,9 @@ def example_table(func: NaryFunc, start: Vector) -> PrettyTable:
     )
     return table
 
+def quadratic(x: float, y: float) -> float:
+    return x * x + y * y
+
 def spherical(x: float, y: float) -> float:
     return 100 - np.sqrt(100 - x ** 2 - y ** 2)
 
@@ -167,7 +177,7 @@ def noisy_function(x: float, y: float, amplitude: float, function: Callable[[flo
     return function(x, y) + noise(x, y, amplitude)
 
 def noisy_wrapper(x: float, y: float) -> float:
-    return noisy_function(x, y, amplitude=0.1, function=spherical)
+    return noisy_function(x, y, amplitude=0.1, function=rosenbrock)
 
 INTERESTING = \
     [
@@ -176,10 +186,13 @@ INTERESTING = \
         [himmelblau, [1.0, 1.0], "Himmelblau function: (x^2 + y - 11)^2 + (x + y^2 - 7)^2"]
     ]
 
+# lambda x: x ** 3 + x ** 2, -2/3
+# lambda x, y: x ** 3 + x ** 2 + y ** 3 + y ** 2, (-2/3, -2/3)
+
 if __name__ == "__main__":
-    func = NaryFunc(noisy_wrapper)
-    start = np.array([0.0, 5.0])
+    func = NaryFunc(quadratic)
+    start = np.array([-3.0, 5.0])
     print(example_table(func, start))
-    x, _, _, trajectory = gradient_descent(func, start, armijo_rule_gen(α=0.9, q=0.5, c=0.5))
-    plot_gradient(lambda x: func(x), len(start) == 1, len(start) == 2, trajectory, name="Noisy Rosenbroke Function")
+    x, _, _, trajectory = gradient_descent(func, start, wolfe_rule_gen(α=0.5, c1=1e-4, c2=0.3))
+    plot_gradient(func, len(start) == 1, len(start) == 2, trajectory, name="Quadratic Function")
     print(x)
