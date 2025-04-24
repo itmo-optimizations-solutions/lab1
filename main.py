@@ -25,12 +25,19 @@ def gradient_descent(
 
     while True:
         gradient = func.gradient(x)
-
-        eps_array = np.full_like(gradient, ε ** 0.5)
         max_state = False
-        if np.allclose(gradient, 0) and func(x + eps_array) < func(x):
-            x += eps_array
-            max_state = True
+
+        if np.allclose(gradient, 0):
+            radius_area = ε ** 0.5
+            func_val = func(x)
+            for att in range(20):
+                random_multipliers = np.random.randint(-10, 11, x.shape) / 10.0
+                eps_array = radius_area * random_multipliers
+                if func(x + eps_array) < func_val:
+                    x += eps_array
+                    max_state = True
+                    gradient = func.gradient(x)
+                    break
 
         u = -gradient
         α = learning(k) if is_scheduling(learning) else learning(func, x, u)
@@ -75,7 +82,7 @@ def armijo_rule(
     c: float,
 ) -> float | None:
     for _ in range(MAX_ITER_RULE):
-        if func(x + α * direction) <= func(x) + c * α * np.linalg.norm(direction):
+        if func(x + α * direction) <= func(x) + c * α * np.dot(-direction, direction):
             return α
         α *= q
     return None
@@ -89,9 +96,9 @@ def wolfe_rule(
     c2: float,
 ) -> float | None:
     for _ in range(MAX_ITER_RULE):
-        if func(x + α * direction) > func(x) + c1 * α * np.dot(func.gradient(x), direction):
+        if func(x + α * direction) > func(x) + c1 * α * np.dot(-direction, direction):
             α *= 0.5
-        elif np.dot(func.gradient(x + α * direction), direction) < c2 * np.dot(func.gradient(x), direction):
+        elif np.dot(func.gradient(x + α * direction), direction) < c2 * np.dot(-direction, direction):
             α *= 1.5
         else:
             return α
@@ -173,11 +180,19 @@ def himmelblau(x: float, y: float) -> float:
 def noise(x: float, y: float, amplitude: float = 0.1) -> float:
     return amplitude * (np.sin(10 * x + 20 * y) + np.cos(15 * x - 10 * y)) / 2
 
-def noisy_function(x: float, y: float, amplitude: float, function: Callable[[float, float], float]) -> float:
-    return function(x, y) + noise(x, y, amplitude)
+def random_noise(x: float, y: float, amplitude: float = 0.1) -> float:
+    return amplitude * np.random.randn()
+
+def noisy_function(
+    x: float,
+    y: float,
+    amplitude: float,
+    function: Callable[[float, float], float]
+) -> float:
+    return function(x, y) + random_noise(x, y, amplitude)
 
 def noisy_wrapper(x: float, y: float) -> float:
-    return noisy_function(x, y, amplitude=0.1, function=rosenbrock)
+    return noisy_function(x, y, amplitude=0.001, function=quadratic)
 
 INTERESTING = \
     [
@@ -188,11 +203,12 @@ INTERESTING = \
 
 # lambda x: x ** 3 + x ** 2, -2/3
 # lambda x, y: x ** 3 + x ** 2 + y ** 3 + y ** 2, (-2/3, -2/3)
+# lambda x, y : x ** 4 + 3 * x * (y ** 2) + y ** 4, (-1.060677130401505, +/- 1.2612883654751406)
 
 if __name__ == "__main__":
-    func = NaryFunc(quadratic)
-    start = np.array([-3.0, 5.0])
+    func = NaryFunc(noisy_wrapper)
+    start = np.array([1.0, 1.0])
     print(example_table(func, start))
     x, _, _, trajectory = gradient_descent(func, start, wolfe_rule_gen(α=0.5, c1=1e-4, c2=0.3))
-    plot_gradient(func, len(start) == 1, len(start) == 2, trajectory, name="Quadratic Function")
+    plot_gradient(func, len(start) == 1, len(start) == 2, trajectory)
     print(x)
