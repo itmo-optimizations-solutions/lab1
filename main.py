@@ -122,6 +122,38 @@ def scipy_armijo(func: NaryFunc, x: Vector, direction: Vector) -> float:
         alpha0=0.5,
     )[0]
 
+def dichotomy_gen(a: float, b: float, eps: float = 1e-6) -> Rule:
+    return lambda func, x, direction: dichotomy(func, x, direction, a=a, b=b, eps=eps)
+
+def dichotomy(
+    func: NaryFunc,
+    x: np.ndarray,
+    direction: np.ndarray,
+    a: float,
+    b: float,
+    eps: float
+) -> float:
+    def phi(alpha: float) -> float:
+        return func(x + alpha * direction)
+
+    while (b - a) > eps:
+        c = (a + b) / 2
+        f_c = phi(c)
+
+        a1 = (a + c) / 2.0
+        f_a1 = phi(a1)
+        b1 = (c + b) / 2.0
+        f_b1 = phi(b1)
+
+        if f_a1 < f_c:
+            b = c
+        elif f_c > f_b1:
+            a = c
+        else:
+            a, b = a1, b1
+
+    return (a + b) / 2.0
+
 # === Launcher
 
 @dataclass
@@ -146,6 +178,8 @@ KNOWN = [
 
     Algorithm("SciPy Armijo", "!", scipy_armijo),
     Algorithm("SciPy Wolfe", "!", scipy_wolfe),
+
+    Algorithm("Dichotomy", "a=0.0, b=1.0, c=0.5", dichotomy_gen(a=0.0, b=1.0)),
 ]
 
 def example_table(func: NaryFunc, start: Vector) -> PrettyTable:
