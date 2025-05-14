@@ -173,7 +173,7 @@ KNOWN = [
     Algorithm("Exponential Decay", "λ=0.01", exponential_decay(λ=0.01)),
     Algorithm("Polynomial Decay", "α=0.5, β=1", polynomial_decay(α=0.5, β=1)),
 
-    Algorithm("Armijo", "α=0.9, q=0.5, c=0.5", armijo_rule_gen(α=0.9, q=0.5, c=0.5)),
+    Algorithm("Armijo", "α=0.9, q=0.5, c=1e-4", armijo_rule_gen(α=0.9, q=0.5, c=1e-4)),
     Algorithm("Wolfe Rule", "α=0.5, c1=1e-4, c2=0.3", wolfe_rule_gen(α=0.5, c1=1e-4, c2=0.3)),
 
     Algorithm("SciPy Armijo", "!", scipy_armijo),
@@ -243,6 +243,6 @@ if __name__ == "__main__":
     func = NaryFunc(noisy_wrapper)
     start = np.array([1.0, 1.0])
     print(example_table(func, start))
-    x, _, _, trajectory = gradient_descent(func, start, wolfe_rule_gen(α=0.5, c1=1e-4, c2=0.3))
-    plot_gradient(func, len(start) == 1, len(start) == 2, trajectory)
+    x, _, _, trajectory = gradient_descent(func, start, constant(0.003))
+    plot_gradient(func, len(start) == 1, len(start) == 2, trajectory, name="Noisy Quadratic")
     print(x)
