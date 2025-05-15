@@ -235,10 +235,6 @@ INTERESTING = \
         [himmelblau, [1.0, 1.0], "Himmelblau function: (x^2 + y - 11)^2 + (x + y^2 - 7)^2"]
     ]
 
-# lambda x: x ** 3 + x ** 2, -2/3
-# lambda x, y: x ** 3 + x ** 2 + y ** 3 + y ** 2, (-2/3, -2/3)
-# lambda x, y : x ** 4 + 3 * x * (y ** 2) + y ** 4, (-1.060677130401505, +/- 1.2612883654751406)
-
 if __name__ == "__main__":
     func = NaryFunc(noisy_wrapper)
     start = np.array([1.0, 1.0])
